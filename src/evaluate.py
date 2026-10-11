@@ -1,4 +1,3 @@
-
 import argparse
 from pathlib import Path
 
@@ -17,24 +16,35 @@ from src.transforms import get_transforms
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
 MODEL_PATHS = {
     "baseline": PROJECT_ROOT / "models" / "mobilenet_v3_small_baseline.pth",
     "augmented": PROJECT_ROOT / "models" / "mobilenet_v3_small_augmented.pth",
     "finetuned": PROJECT_ROOT / "models" / "mobilenet_v3_small_finetuned.pth",
 }
+
 BATCH_SIZE = 32
 
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Avalia um modelo WasteWise no conjunto de validação."
+        description="Avalia um modelo WasteWise."
     )
+
     parser.add_argument(
         "--model",
         choices=["baseline", "augmented", "finetuned"],
         default="augmented",
         help="Modelo que será avaliado.",
     )
+
+    parser.add_argument(
+        "--split",
+        choices=["validation", "test"],
+        default="validation",
+        help="Conjunto de dados usado na avaliação.",
+    )
+
     args = parser.parse_args()
 
     device = torch.device("cpu")
@@ -51,7 +61,7 @@ def main():
     _, eval_transform = get_transforms()
 
     dataset = WasteDataset(
-        split="validation",
+        split=args.split,
         transform=eval_transform,
     )
 
@@ -63,11 +73,13 @@ def main():
     )
 
     model = create_model()
+
     state_dict = torch.load(
         model_path,
         map_location=device,
         weights_only=True,
     )
+
     model.load_state_dict(state_dict)
     model = model.to(device)
     model.eval()
@@ -78,6 +90,7 @@ def main():
     with torch.no_grad():
         for images, labels in loader:
             images = images.to(device)
+
             outputs = model(images)
             predictions = outputs.argmax(dim=1)
 
@@ -87,7 +100,11 @@ def main():
     categories = dataset.categories
     category_ids = list(range(len(categories)))
 
-    accuracy = accuracy_score(all_labels, all_predictions)
+    accuracy = accuracy_score(
+        all_labels,
+        all_predictions,
+    )
+
     macro_f1 = f1_score(
         all_labels,
         all_predictions,
@@ -95,6 +112,7 @@ def main():
         average="macro",
         zero_division=0,
     )
+
     weighted_f1 = f1_score(
         all_labels,
         all_predictions,
@@ -103,7 +121,7 @@ def main():
         zero_division=0,
     )
 
-    print("\n=== RESULTADOS DA VALIDAÇÃO ===")
+    print(f"\n=== RESULTADOS: {args.split.upper()} ===")
     print(f"Imagens avaliadas: {len(all_labels)}")
     print(f"Acurácia: {accuracy:.4f} ({accuracy * 100:.2f}%)")
     print(f"F1 macro: {macro_f1:.4f}")
@@ -124,6 +142,7 @@ def main():
     print("\n=== MATRIZ DE CONFUSÃO ===")
     print("Linhas = classe real; colunas = classe prevista.")
     print(f"Ordem das categorias: {categories}")
+
     print(
         confusion_matrix(
             all_labels,
