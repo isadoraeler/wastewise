@@ -91,3 +91,84 @@ Investigar os erros restantes e definir o modelo candidato para avaliação fina
 
 ### Status
 Experimento concluído; resultados de validação registrados.
+
+### Experimento 3 — Fine-tuning parcial
+
+**Objetivo:** verificar se o ajuste dos dois últimos blocos da MobileNetV3-Small melhora o modelo com data augmentation.
+
+**Configuração:**
+- Modelo inicial: `mobilenet_v3_small_augmented.pth`
+- Blocos treináveis do extrator: 11 e 12
+- Taxa de aprendizado do extrator: 0,00001
+- Taxa de aprendizado do classificador: 0,0001
+- Otimizador: Adam
+- Função de perda: CrossEntropyLoss
+- Máximo de épocas: 15
+- Early stopping: paciência de 4 épocas
+- Conjunto utilizado para acompanhamento: validação
+
+**Resultados:**
+
+| Época | Perda de treino | Perda de validação |
+|---|---:|---:|
+| 1 | 0,0784 | 0,3983 |
+| 2 | 0,0671 | 0,3881 |
+| 3 | 0,0530 | 0,3916 |
+| 4 | 0,0510 | 0,4013 |
+| 5 | 0,0434 | 0,3999 |
+| 6 | 0,0407 | 0,4011 |
+
+Melhor perda de validação: **0,3881**, na época 2.
+
+**Conclusão provisória:** o treinamento foi interrompido pelo early stopping após seis épocas. A perda de treino continuou diminuindo, enquanto a de validação deixou de melhorar. O melhor valor de validação ainda ficou acima do melhor resultado do experimento com augmentation (0,3828). Portanto, ainda não há evidência de que o fine-tuning seja superior. A decisão será tomada após avaliar as métricas de classificação.
+
+**Checkpoint:** `models/mobilenet_v3_small_finetuned.pth`
+
+**Status:** aguardando avaliação de acurácia, F1 e matriz de confusão na validação.
+
+### Experimento 4 — Fine-tuning parcial
+
+**Objetivo:** verificar se o ajuste parcial do extrator de características melhora o modelo com data augmentation.
+
+**Configuração:**
+- Modelo inicial: `mobilenet_v3_small_augmented.pth`
+- Arquitetura: MobileNetV3-Small pré-treinada
+- Blocos ajustados: 11 e 12
+- Taxa de aprendizado do extrator: 0,00001
+- Taxa de aprendizado do classificador: 0,0001
+- Otimizador: Adam
+- Função de perda: CrossEntropyLoss
+- Máximo de épocas: 15
+- Early stopping: paciência de 4 épocas
+
+**Resultados do treinamento:**
+
+| Época | Perda de treino | Perda de validação |
+|---|---:|---:|
+| 1 | 0,0784 | 0,3983 |
+| 2 | 0,0671 | 0,3881 |
+| 3 | 0,0530 | 0,3916 |
+| 4 | 0,0510 | 0,4013 |
+| 5 | 0,0434 | 0,3999 |
+| 6 | 0,0407 | 0,4011 |
+
+Melhor perda de validação: **0,3881**, na época 2.
+
+**Resultados da avaliação:**
+
+- Imagens de validação: 710
+- Acurácia: 85,49%
+- F1 macro: 0,8617
+- F1 ponderado: 0,8542
+
+**Comparação com os experimentos anteriores:**
+
+O fine-tuning apresentou desempenho inferior ao modelo com data augmentation, que obteve acurácia de 86,20%, F1 macro de 0,8666 e F1 ponderado de 0,8618. O modelo com fine-tuning acertou 607 das 710 imagens, enquanto o modelo com augmentation acertou 612.
+
+O fine-tuning apresentou resultados melhores em algumas categorias, como Food Organics, mas teve queda em outras, incluindo Glass, Metal, Miscellaneous Trash e Plastic.
+
+**Conclusão:** com a configuração testada, o fine-tuning parcial não superou o modelo com data augmentation. A perda de treino continuou diminuindo, enquanto a perda de validação deixou de melhorar, indicando possível sobreajuste. O modelo com augmentation permanece como o melhor candidato até o momento.
+
+**Checkpoint:** `models/mobilenet_v3_small_finetuned.pth`
+
+**Status:** avaliação de validação concluída. O conjunto de teste permanece reservado para a avaliação final.
