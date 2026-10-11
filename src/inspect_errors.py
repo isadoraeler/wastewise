@@ -1,8 +1,9 @@
-
+import argparse
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import torch
+from PIL import Image
 from torch.utils.data import DataLoader
 
 from src.dataset import WasteDataset
@@ -11,15 +12,38 @@ from src.transforms import get_transforms
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-MODEL_PATH = PROJECT_ROOT / "models" / "mobilenet_v3_small.pth"
+MODEL_PATHS = {
+    "baseline": PROJECT_ROOT / "models" / "mobilenet_v3_small_baseline.pth",
+    "augmented": PROJECT_ROOT / "models" / "mobilenet_v3_small_augmented.pth",
+}
 
 BATCH_SIZE = 32
 MAX_IMAGES = 20
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Inspeciona os erros de classificação do WasteWise."
+    )
+    parser.add_argument(
+        "--model",
+        choices=["baseline", "augmented"],
+        default="augmented",
+        help="Modelo que será analisado.",
+    )
+    args = parser.parse_args()
+
+    model_path = MODEL_PATHS[args.model]
+
+    if not model_path.exists():
+        raise FileNotFoundError(
+            f"Modelo não encontrado: {model_path}"
+        )
+
     device = torch.device("cpu")
     print(f"Dispositivo: {device}")
+    print(f"Modelo analisado: {args.model}")
+    print(f"Arquivo: {model_path.name}")
 
     _, eval_transform = get_transforms()
 
@@ -38,7 +62,7 @@ def main():
     model = create_model()
 
     state_dict = torch.load(
-        MODEL_PATH,
+        model_path,
         map_location=device,
         weights_only=True,
     )
@@ -95,14 +119,15 @@ def main():
         rows,
         columns,
         figsize=(16, rows * 4),
+        squeeze=False,
     )
-    axes = axes.flatten() if hasattr(axes, "flatten") else [axes]
+    axes = axes.flatten()
 
     for axis, error in zip(axes, images_to_show):
         sample = dataset.samples[error["dataset_index"]]
         image_path = PROJECT_ROOT / sample["image_path"]
 
-        with __import__("PIL.Image", fromlist=["Image"]).open(image_path) as image:
+        with Image.open(image_path) as image:
             axis.imshow(image.convert("RGB"))
 
         axis.set_title(
@@ -115,7 +140,9 @@ def main():
     for axis in axes[len(images_to_show):]:
         axis.axis("off")
 
-    figure.suptitle("Erros do WasteWise — conjunto de validação")
+    figure.suptitle(
+        f"Erros do WasteWise — validação ({args.model})"
+    )
     figure.tight_layout()
     plt.show()
 
