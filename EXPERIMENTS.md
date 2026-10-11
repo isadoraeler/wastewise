@@ -172,3 +172,33 @@ O fine-tuning apresentou resultados melhores em algumas categorias, como Food Or
 **Checkpoint:** `models/mobilenet_v3_small_finetuned.pth`
 
 **Status:** avaliação de validação concluída. O conjunto de teste permanece reservado para a avaliação final.
+
+### Avaliação final — conjunto de teste
+
+**Modelo selecionado:** MobileNetV3-Small com data augmentation.
+
+**Conjunto de teste:** 719 imagens, reservado para a avaliação final.
+
+**Resultados gerais:**
+
+- Acurácia: 86,79%
+- F1 macro: 0,8712
+- F1 ponderado: 0,8677
+- Acertos: 624 de 719
+- Erros: 95 de 719
+
+**Resultados por categoria — F1:**
+
+| Categoria | F1 |
+|---|---:|
+| Cardboard | 0,8831 |
+| Food Organics | 0,9120 |
+| Glass | 0,8976 |
+| Metal | 0,8621 |
+| Miscellaneous Trash | 0,7871 |
+| Paper | 0,8794 |
+| Plastic | 0,8448 |
+| Textile Trash | 0,8261 |
+| Vegetation | 0,9481 |
+
+**Conclusão:** o modelo apresentou 86,79% de acurácia no conjunto de teste, resultado próximo aos 86,20% observados na validação. Vegetation obteve o melhor F1, enquanto Miscellaneous Trash apresentou o menor. Os resultados indicam desempenho promissor, mas também mostram limitações em algumas categorias. O modelo deve ser entendido como um classificador visual de resíduos, e suas previsões não substituem orientações locais sobre descarte e reciclagem.
