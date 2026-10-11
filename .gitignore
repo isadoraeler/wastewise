@@ -220,3 +220,11 @@ __marimo__/
 .streamlit/secrets.toml
 
 .venv/
+
+# Dataset local
+/data/realwaste-main/
+
+# Arquivos de modelos treinados
+/models/
+*.pth
+*.pt

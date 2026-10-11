@@ -1,0 +1,6 @@
+Pillow==12.3.0
+matplotlib==3.11.2
+ImageHash==4.3.2
+torch==2.13.0
+torchvision==0.28.0
+scikit-learn==1.9.1
