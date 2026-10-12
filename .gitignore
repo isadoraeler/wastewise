@@ -228,3 +228,6 @@ __marimo__/
 /models/
 *.pth
 *.pt
+
+# Banco de dados local do WasteWise
+/data/wastewise.db
