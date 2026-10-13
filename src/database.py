@@ -86,5 +86,15 @@ def get_analysis_history():
 
     return [dict(row) for row in rows]
 
+def clear_analysis_history():
+    with get_connection() as connection:
+        connection.execute("DELETE FROM analyses")
+        
+def delete_analysis(analysis_id):
+    with get_connection() as connection:
+        connection.execute(
+            "DELETE FROM analyses WHERE id = ?",
+            (analysis_id,),
+        )
 
 initialize_database()
