@@ -3,7 +3,11 @@ from pathlib import Path
 import gradio as gr
 import torch
 
-from src.database import get_analysis_history, save_analysis
+from src.database import (
+    clear_analysis_history,
+    get_analysis_history,
+    save_analysis,
+)
 from src.model import create_model
 from src.transforms import get_transforms
 
@@ -32,6 +36,7 @@ DEVICE = torch.device("cpu")
 
 _, eval_transform = get_transforms()
 
+
 def get_history_table():
     history = get_analysis_history()
 
@@ -46,6 +51,11 @@ def get_history_table():
         ]
         for item in history
     ]
+
+
+def clear_history():
+    clear_analysis_history()
+    return get_history_table()
 
 
 def load_model():
@@ -147,7 +157,6 @@ def predict(image):
     return scores, message
 
 
-
 with gr.Blocks() as demo:
     gr.Markdown("# WasteWise — Classificador visual de resíduos")
 
@@ -162,16 +171,29 @@ with gr.Blocks() as demo:
                 type="pil",
                 label="Envie uma imagem do resíduo",
             )
-            predict_button = gr.Button("Analisar imagem", variant="primary")
+
+            predict_button = gr.Button(
+                "Analisar imagem",
+                variant="primary",
+            )
 
         with gr.Column():
             prediction_output = gr.Label(
                 num_top_classes=3,
                 label="Categorias previstas",
             )
+
             message_output = gr.Markdown()
 
     gr.Markdown("## Histórico de análises")
+
+    with gr.Row():
+        refresh_button = gr.Button("Atualizar histórico")
+
+        clear_button = gr.Button(
+            "Limpar histórico",
+            variant="stop",
+        )
 
     history_output = gr.Dataframe(
         headers=[
@@ -195,14 +217,85 @@ with gr.Blocks() as demo:
         label="Análises salvas",
     )
 
+    confirmation_message = gr.Markdown(
+        "Tem certeza de que deseja excluir todo o histórico?",
+        visible=False,
+    )
+
+    confirm_clear = gr.Button(
+        "Confirmar exclusão",
+        variant="stop",
+        visible=False,
+    )
+
+    cancel_clear = gr.Button(
+        "Cancelar",
+        visible=False,
+    )
+
     predict_button.click(
         fn=predict,
         inputs=image_input,
-        outputs=[prediction_output, message_output],
+        outputs=[
+            prediction_output,
+            message_output,
+        ],
     ).then(
         fn=get_history_table,
         inputs=None,
         outputs=history_output,
+    )
+
+    refresh_button.click(
+        fn=get_history_table,
+        inputs=None,
+        outputs=history_output,
+    )
+
+    clear_button.click(
+        fn=lambda: (
+            gr.update(visible=True),
+            gr.update(visible=True),
+            gr.update(visible=True),
+        ),
+        inputs=None,
+        outputs=[
+            confirmation_message,
+            confirm_clear,
+            cancel_clear,
+        ],
+    )
+
+    confirm_clear.click(
+        fn=clear_history,
+        inputs=None,
+        outputs=history_output,
+    ).then(
+        fn=lambda: (
+            gr.update(visible=False),
+            gr.update(visible=False),
+            gr.update(visible=False),
+        ),
+        inputs=None,
+        outputs=[
+            confirmation_message,
+            confirm_clear,
+            cancel_clear,
+        ],
+    )
+
+    cancel_clear.click(
+        fn=lambda: (
+            gr.update(visible=False),
+            gr.update(visible=False),
+            gr.update(visible=False),
+        ),
+        inputs=None,
+        outputs=[
+            confirmation_message,
+            confirm_clear,
+            cancel_clear,
+        ],
     )
 
 
