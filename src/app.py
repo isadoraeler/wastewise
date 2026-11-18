@@ -2,6 +2,7 @@ from pathlib import Path
 
 import gradio as gr
 import torch
+import os
 
 from src.database import (
     clear_analysis_history,
@@ -64,7 +65,7 @@ def load_model():
             f"Pesos do modelo não encontrados: {MODEL_PATH}"
         )
 
-    model = create_model()
+    model = create_model(pretrained=False)
 
     state_dict = torch.load(
         MODEL_PATH,
@@ -300,4 +301,7 @@ with gr.Blocks() as demo:
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=int(os.environ.get("PORT", 7860)),
+    )
